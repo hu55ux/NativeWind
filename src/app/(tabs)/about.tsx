@@ -1,15 +1,12 @@
-import { Link } from 'expo-router'
-import { StyleSheet, Text, View } from 'react-native'
+import { View, Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
-const About = () => {
+export default function FeedScreen() {
   return (
-    <View>
-      <Text>About page</Text>
-      <Link href={'/products'}>Go To Products page</Link>
+    <View className="flex-1 bg-[#F5F6F8] items-center justify-center gap-4">
+      <Ionicons name="radio-outline" size={64} color="#CCCCCC" />
+      <Text className="text-[22px] font-bold text-[#1A1A1A]">Feed</Text>
+      <Text className="text-sm text-[#999]">Coming soon</Text>
     </View>
-  )
+  );
 }
-
-export default About
-
-const styles = StyleSheet.create({})
