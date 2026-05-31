@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons, Feather } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = (SCREEN_WIDTH - 48 - 12) / 2;
@@ -39,6 +40,7 @@ export default function HomeScreen() {
   const [loading,          setLoading]          = useState(true);
   const [activeDot,        setActiveDot]        = useState(0);
   const [likedProducts,    setLikedProducts]    = useState<Set<number>>(new Set());
+  const router = useRouter();
 
   useEffect(() => { fetchProducts(); }, []);
 
@@ -164,6 +166,15 @@ export default function HomeScreen() {
           {/* Camera button */}
           <TouchableOpacity className="bg-white rounded-xl p-2" activeOpacity={0.8}>
             <Ionicons name="camera-outline" size={20} color="#333" />
+          </TouchableOpacity>
+
+          {/* Register button */}
+          <TouchableOpacity 
+            onPress={() => router.push('/register')}
+            className="bg-white/20 rounded-xl p-2" 
+            activeOpacity={0.8}
+          >
+            <Ionicons name="person-add-outline" size={20} color="white" />
           </TouchableOpacity>
         </View>
       </View>
