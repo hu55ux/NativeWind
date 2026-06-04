@@ -1,322 +1,248 @@
-import { useState, useRef } from 'react'
-import { Text, TextInput, TouchableOpacity, View, Pressable } from 'react-native'
-import Animated, { FadeIn, SlideInRight, SlideOutLeft, SlideInLeft, SlideOutRight } from 'react-native-reanimated'
-import { Ionicons } from '@expo/vector-icons'
-import { KeyboardAwareScrollView } from 'react-native-keyboard-controller'
+import React, { useState, useRef } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Dimensions,
+  Animated,
+  Keyboard,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+} from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
+import { useColorScheme } from 'nativewind';
 
-const Register = () => {
-    const [step, setStep] = useState(1)
-    const [direction, setDirection] = useState<'forward' | 'backward'>('forward')
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-    const [formData, setFormData] = useState({
-        name: '',
-        lastname: '',
-        phone: '',
-        email: '',
-        password: '',
-        username: '',
-        acceptTerms: false
-    })
-    const [errors, setErrors] = useState({
-        name: '',
-        lastname: '',
-        phone: '',
-        email: '',
-        password: '',
-        username: '',
-        acceptTerms: ''
-    })
+export default function RegisterScreen() {
+  const { colorScheme } = useColorScheme();
+  const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
-    const validate = (currentStep: number) => {
-        let valid = true
-        const newErrors = { ...errors }
+  // Form states
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    fullName: '',
+    phoneNumber: '',
+  });
 
-        if (currentStep === 1) {
-            if (!formData.name) {
-                newErrors.name = 'Ad tələb olunur'
-                valid = false
-            } else newErrors.name = ''
+  const scrollX = useRef(new Animated.Value(0)).current;
 
-            if (!formData.lastname) {
-                newErrors.lastname = 'Soyad tələb olunur'
-                valid = false
-            } else newErrors.lastname = ''
+  const nextStep = () => {
+    if (step < 3) {
+      setStep(step + 1);
+      Animated.timing(scrollX, {
+        toValue: -SCREEN_WIDTH * step,
+        duration: 400,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      handleRegister();
+    }
+  };
 
-            if (!formData.phone) {
-                newErrors.phone = 'Nömrə tələb olunur'
-                valid = false
-            } else newErrors.phone = ''
-        }
+  const prevStep = () => {
+    if (step > 1) {
+      setStep(step - 1);
+      Animated.timing(scrollX, {
+        toValue: -SCREEN_WIDTH * (step - 2),
+        duration: 400,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      router.back();
+    }
+  };
 
-        if (currentStep === 2) {
-            if (!formData.email) {
-                newErrors.email = 'E-poçt tələb olunur'
-                valid = false
-            } else if (!formData.email.includes('@')) {
-                newErrors.email = 'Yanlış e-poçt formatı'
-                valid = false
-            } else newErrors.email = ''
-
-            if (formData.password.length < 8) {
-                newErrors.password = 'Şifrə ən azı 8 simvol olmalıdır'
-                valid = false
-            } else newErrors.password = ''
-        }
-
-        if (currentStep === 3) {
-            if (!formData.username) {
-                newErrors.username = 'İstifadəçi adı tələb olunur'
-                valid = false
-            } else newErrors.username = ''
-
-            if (!formData.acceptTerms) {
-                newErrors.acceptTerms = 'Qaydalar qəbul edilməlidir'
-                valid = false
-            } else newErrors.acceptTerms = ''
-        }
-
-        setErrors(newErrors)
-        return valid
+  const handleRegister = async () => {
+    if (formData.password !== formData.confirmPassword) {
+      Alert.alert('Xəta', 'Şifrələr uyğun gəlmir');
+      return;
     }
 
-    const handleChange = (name: string, value: string | boolean) => {
-        setFormData(prevState => ({ ...prevState, [name]: value }))
-        if (errors[name as keyof typeof errors]) {
-            setErrors(prev => ({ ...prev, [name]: '' }))
-        }
+    setLoading(true);
+    try {
+      const response = await fetch('https://dummyjson.com/users/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName: formData.fullName.split(' ')[0],
+          lastName: formData.fullName.split(' ')[1] || '',
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Registration failed');
+      }
+
+      const data = await response.json();
+      console.log('Register success:', data);
+      Alert.alert('Uğurlu', 'Qeydiyyat tamamlandı!', [
+        { text: 'Giriş et', onPress: () => router.replace('/login') }
+      ]);
+    } catch (e) {
+      console.error('Register error:', e);
+      Alert.alert('Xəta', 'Qeydiyyat zamanı xəta baş verdi.');
+    } finally {
+      setLoading(false);
     }
+  };
 
-    const nextStep = () => {
-        if (validate(step)) {
-            if (step < 3) {
-                setDirection('forward')
-                setStep(prev => prev + 1)
-            } else {
-                console.log('Final Form Data:', formData)
-                alert('Qeydiyyat tamamlandı!')
-            }
-        }
-    }
-
-    const prevStep = () => {
-        setDirection('backward')
-        setStep(prev => prev - 1)
-    }
-
-    const goToStep = (targetStep: number) => {
-        if (targetStep === step) return
-        if (targetStep < step) {
-            setDirection('backward')
-            setStep(targetStep)
-        } else {
-            // Validate all steps up to the target
-            let canProceed = true
-            for (let s = step; s < targetStep; s++) {
-                if (!validate(s)) {
-                    canProceed = false
-                    break
-                }
-            }
-            if (canProceed) {
-                setDirection('forward')
-                setStep(targetStep)
-            }
-        }
-    }
-
-    return (
-        <View className="flex-1 bg-zinc-50">
-            <KeyboardAwareScrollView
-                bottomOffset={20}
-                contentContainerStyle={{ flexGrow: 1 }}
-                keyboardShouldPersistTaps="handled"
-                showsVerticalScrollIndicator={false}
-            >
-                <View className="flex-1 justify-center px-6 py-12">
-                    <Animated.View 
-                        entering={FadeIn.duration(800)}
-                        className="bg-white p-8 rounded-[48px] shadow-2xl shadow-emerald-900/10 border border-zinc-100"
-                    >
-                        <View className="items-center mb-8">
-                            <View className="bg-emerald-50 p-4 rounded-full mb-4">
-                                <Ionicons name="person-add" size={32} color="#059669" />
-                            </View>
-                            <Text className="text-3xl font-black text-zinc-900 text-center tracking-tight">Hesab Yaradın</Text>
-                            <Text className="text-zinc-500 text-center mt-1">Davam etmək üçün məlumatları doldurun</Text>
-                        </View>
-
-                        <ProgressIndicator step={step} onStepPress={goToStep} />
-
-                        <Animated.View 
-                            key={step}
-                            entering={direction === 'forward' ? SlideInRight.duration(500) : SlideInLeft.duration(500)}
-                            exiting={direction === 'forward' ? SlideOutLeft.duration(500) : SlideOutRight.duration(500)}
-                            className="gap-1"
-                        >
-                            {step === 1 && (
-                                <>
-                                    <CustomInput
-                                        label="Ad"
-                                        value={formData.name}
-                                        onChangeText={(t: string) => handleChange('name', t)}
-                                        placeholder="Adınızı daxil edin"
-                                        error={errors.name}
-                                    />
-                                    <CustomInput
-                                        label="Soyad"
-                                        value={formData.lastname}
-                                        onChangeText={(t: string) => handleChange('lastname', t)}
-                                        placeholder="Soyadınızı daxil edin"
-                                        error={errors.lastname}
-                                    />
-                                    <CustomInput
-                                        label="Telefon"
-                                        value={formData.phone}
-                                        onChangeText={(t: string) => handleChange('phone', t)}
-                                        placeholder="050-000-00-00"
-                                        keyboardType="phone-pad"
-                                        error={errors.phone}
-                                    />
-                                </>
-                            )}
-
-                            {step === 2 && (
-                                <>
-                                    <CustomInput
-                                        label="E-poçt Ünvanı"
-                                        value={formData.email}
-                                        onChangeText={(t: string) => handleChange('email', t)}
-                                        placeholder="email@numunə.com"
-                                        keyboardType="email-address"
-                                        autoCapitalize="none"
-                                        error={errors.email}
-                                    />
-                                    <CustomInput
-                                        label="Şifrə"
-                                        value={formData.password}
-                                        onChangeText={(t: string) => handleChange('password', t)}
-                                        placeholder="••••••••"
-                                        secureTextEntry
-                                        error={errors.password}
-                                    />
-                                </>
-                            )}
-
-                            {step === 3 && (
-                                <>
-                                    <CustomInput
-                                        label="İstifadəçi Adı"
-                                        value={formData.username}
-                                        onChangeText={(t: string) => handleChange('username', t)}
-                                        placeholder="İstifadəçi adı seçin"
-                                        error={errors.username}
-                                    />
-                                    
-                                    <Pressable 
-                                        onPress={() => handleChange('acceptTerms', !formData.acceptTerms)}
-                                        className="flex-row items-center mt-4 mb-8 bg-zinc-50 p-4 rounded-2xl border border-zinc-100"
-                                    >
-                                        <View className={`size-6 rounded-md items-center justify-center border-2 ${formData.acceptTerms ? 'bg-emerald-600 border-emerald-600' : 'border-zinc-300 bg-white'}`}>
-                                            {formData.acceptTerms && <Ionicons name="checkmark" size={16} color="white" />}
-                                        </View>
-                                        <Text className="ml-3 text-zinc-600 text-sm flex-1 leading-5">
-                                            İstifadə <Text className="text-emerald-600 font-bold">şərtlərini</Text> və məxfilik siyasətini qəbul edirəm
-                                        </Text>
-                                    </Pressable>
-                                    {errors.acceptTerms ? <Text className="text-red-500 text-xs mt-[-24px] mb-6 ml-1 font-medium">{errors.acceptTerms}</Text> : null}
-                                </>
-                            )}
-                        </Animated.View>
-
-                        <View className={`flex-row gap-4 mt-4 ${step === 1 ? 'justify-end' : 'justify-between'}`}>
-                            {step > 1 && (
-                                <TouchableOpacity 
-                                    onPress={prevStep}
-                                    activeOpacity={0.7}
-                                    className="flex-1 bg-zinc-100 py-5 rounded-3xl items-center border border-zinc-200"
-                                >
-                                    <Text className="text-zinc-500 font-bold text-lg">Geri</Text>
-                                </TouchableOpacity>
-                            )}
-                            <TouchableOpacity 
-                                onPress={nextStep}
-                                activeOpacity={0.8}
-                                className={`${step > 1 ? 'flex-1' : 'w-full'} bg-emerald-600 py-5 rounded-3xl items-center shadow-lg shadow-emerald-600/30`}
-                            >
-                                <Text className="text-white font-black text-lg">
-                                    {step === 3 ? 'Tamamla' : 'Növbəti'}
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-                    </Animated.View>
-                </View>
-            </KeyboardAwareScrollView>
-        </View>
-    )
-}
-
-export default Register
-
-const ProgressIndicator = ({ step, onStepPress }: { step: number, onStepPress: (s: number) => void }) => (
-    <View className="flex-row items-center justify-between mb-12 px-2 mt-4">
-        {[1, 2, 3].map((i) => (
-            <View key={i} className="flex-row items-center flex-1">
-                <TouchableOpacity 
-                    onPress={() => onStepPress(i)}
-                    activeOpacity={0.7}
-                    className="items-center"
-                >
-                    <View className={`size-11 rounded-2xl items-center justify-center border-2 ${step >= i ? 'bg-emerald-600 border-emerald-600 rotate-12' : 'border-zinc-200 bg-white'}`}>
-                        <View className={step >= i ? '-rotate-12' : ''}>
-                            {step > i ? (
-                                <Ionicons name="checkmark-done" size={24} color="white" />
-                            ) : (
-                                <Text className={`${step >= i ? 'text-white' : 'text-zinc-400'} font-black text-lg`}>{i}</Text>
-                            )}
-                        </View>
-                    </View>
-                </TouchableOpacity>
-                {i < 3 && (
-                    <View className="flex-1 h-[2px] mx-2 bg-zinc-100 overflow-hidden rounded-full">
-                        <View 
-                            className="h-full bg-emerald-600"
-                            style={{ 
-                                width: step > i ? '100%' : '0%'
-                            }} 
-                        />
-                    </View>
-                )}
-            </View>
-        ))}
+  const InputField = ({ label, icon, placeholder, value, onChangeText, secureTextEntry = false, autoFocus = false }: any) => (
+    <View className="mb-5">
+      <Text className="text-[#1A1A1A] dark:text-[#EEE] font-bold text-sm mb-2 ml-1">{label}</Text>
+      <View className="bg-white dark:bg-[#1E1E24] rounded-2xl flex-row items-center px-4 py-4 border border-[#EEEEEE] dark:border-white/5 shadow-sm shadow-black/5">
+        <Ionicons name={icon} size={20} color="#7B39FD" className="mr-3" />
+        <TextInput
+          placeholder={placeholder}
+          value={value}
+          onChangeText={onChangeText}
+          secureTextEntry={secureTextEntry}
+          autoFocus={autoFocus}
+          className="flex-1 text-[#1A1A1A] dark:text-white font-medium"
+          placeholderTextColor="#666"
+        />
+      </View>
     </View>
-)
+  );
 
-const CustomInput = ({ label, value, onChangeText, placeholder, error, secureTextEntry, keyboardType, autoCapitalize }: any) => {
-    const [isFocused, setIsFocused] = useState(false)
-    
-    return (
-        <View className="gap-2 mb-6">
-            <View className="flex-row justify-between items-center ml-1">
-                <Text className={`text-sm font-bold tracking-tight ${isFocused ? 'text-emerald-600' : 'text-zinc-500'}`}>{label.toUpperCase()}</Text>
-                {error ? <Text className="text-red-500 text-[10px] uppercase font-bold">{error}</Text> : null}
-            </View>
-            <View className={`flex-row items-center bg-zinc-50 border-2 rounded-[22px] px-5 py-0.5 ${isFocused ? 'border-emerald-500 bg-white shadow-xl shadow-emerald-500/10' : error ? 'border-red-200 bg-red-50/10' : 'border-zinc-100'}`}>
-                <TextInput
-                    value={value}
-                    onChangeText={onChangeText}
-                    placeholder={placeholder}
-                    placeholderTextColor="#A1A1AA"
-                    className="flex-1 py-4 text-zinc-900 font-medium text-base"
-                    secureTextEntry={secureTextEntry}
-                    keyboardType={keyboardType}
-                    autoCapitalize={autoCapitalize}
-                    onFocus={() => setIsFocused(true)}
-                    onBlur={() => setIsFocused(false)}
-                />
-                {isFocused && !error && <Ionicons name="flash" size={18} color="#10B981" />}
-                {error && <Ionicons name="alert-circle" size={20} color="#EF4444" />}
-            </View>
+  return (
+    <View className="flex-1 bg-[#F5F6F8] dark:bg-[#0F0F12]">
+      <StatusBar style="auto" />
+      
+      {/* Header */}
+      <View className="pt-[60px] pb-6 px-6 flex-row items-center justify-between">
+        <TouchableOpacity onPress={prevStep} className="bg-white dark:bg-[#1E1E24] p-2.5 rounded-xl border border-[#EEEEEE] dark:border-white/5">
+          <Ionicons name="chevron-back" size={24} color={colorScheme === 'dark' ? '#EEE' : '#1A1A1A'} />
+        </TouchableOpacity>
+        
+        <View className="items-center">
+          <Text className="text-[#1A1A1A] dark:text-white text-lg font-black tracking-tight">Qeydiyyat</Text>
+          <View className="flex-row mt-1.5 gap-1">
+            {[1, 2, 3].map((s) => (
+              <View 
+                key={s} 
+                className={`h-1 rounded-full ${s === step ? 'w-5 bg-[#7B39FD]' : 'w-2 bg-[#DDDDDD]'}`} 
+              />
+            ))}
+          </View>
         </View>
-    )
+        <View className="w-11" />
+      </View>
+
+      <ScrollView 
+        className="flex-1"
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <Animated.View 
+          className="flex-row"
+          style={{ transform: [{ translateX: scrollX }] }}
+        >
+          {/* Step 1: Account Info */}
+          <View style={{ width: SCREEN_WIDTH }} className="px-8">
+            <Text className="text-2xl font-black text-[#1A1A1A] dark:text-white mb-2">Başlayaq!</Text>
+            <Text className="text-[#AAAAAA] dark:text-[#666] mb-8 font-medium">Hesab məlumatlarınızı daxil edin</Text>
+            
+            <InputField 
+              label="İstifadəçi adı" 
+              icon="person-outline" 
+              placeholder="username" 
+              value={formData.username}
+              onChangeText={(t: string) => setFormData({...formData, username: t})}
+              autoFocus={true}
+            />
+            <InputField 
+              label="E-poçt" 
+              icon="mail-outline" 
+              placeholder="example@mail.com" 
+              value={formData.email}
+              onChangeText={(t: string) => setFormData({...formData, email: t})}
+            />
+          </View>
+
+          {/* Step 2: Personal Info */}
+          <View style={{ width: SCREEN_WIDTH }} className="px-8">
+            <Text className="text-2xl font-black text-[#1A1A1A] dark:text-white mb-2">Şəxsi Məlumatlar</Text>
+            <Text className="text-[#AAAAAA] dark:text-[#666] mb-8 font-medium">Sizi tanıya bilməyimiz üçün</Text>
+            
+            <InputField 
+              label="Ad Soyad" 
+              icon="card-outline" 
+              placeholder="İlkin İbadov" 
+              value={formData.fullName}
+              onChangeText={(t: string) => setFormData({...formData, fullName: t})}
+            />
+            <InputField 
+              label="Telefon" 
+              icon="call-outline" 
+              placeholder="+994 50 123 45 67" 
+              value={formData.phoneNumber}
+              onChangeText={(t: string) => setFormData({...formData, phoneNumber: t})}
+            />
+          </View>
+
+          {/* Step 3: Security */}
+          <View style={{ width: SCREEN_WIDTH }} className="px-8">
+            <Text className="text-2xl font-black text-[#1A1A1A] dark:text-white mb-2">Təhlükəsizlik</Text>
+            <Text className="text-[#AAAAAA] dark:text-[#666] mb-8 font-medium">Güclü bir şifrə təyin edin</Text>
+            
+            <InputField 
+              label="Şifrə" 
+              icon="lock-closed-outline" 
+              placeholder="••••••••" 
+              secureTextEntry 
+              value={formData.password}
+              onChangeText={(t: string) => setFormData({...formData, password: t})}
+            />
+            <InputField 
+              label="Şifrənin təkrarı" 
+              icon="shield-checkmark-outline" 
+              placeholder="••••••••" 
+              secureTextEntry 
+              value={formData.confirmPassword}
+              onChangeText={(t: string) => setFormData({...formData, confirmPassword: t})}
+            />
+          </View>
+        </Animated.View>
+
+        <View className="px-8 mt-auto pb-10">
+          <TouchableOpacity
+            onPress={nextStep}
+            disabled={loading}
+            className="bg-[#7B39FD] rounded-2xl py-4 items-center shadow-lg shadow-[#7B39FD]/30"
+            activeOpacity={0.8}
+          >
+            {loading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text className="text-white font-extrabold text-lg tracking-wide">
+                {step === 3 ? 'Tamamla' : 'Növbəti'}
+              </Text>
+            )}
+          </TouchableOpacity>
+
+          <View className="flex-row justify-center mt-6">
+            <Text className="text-[#AAAAAA] dark:text-[#666] font-medium">Artıq hesabınız var? </Text>
+            <TouchableOpacity onPress={() => router.push('/login')}>
+              <Text className="text-[#7B39FD] font-bold">Giriş et</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </View>
+  );
 }

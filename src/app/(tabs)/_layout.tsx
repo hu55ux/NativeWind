@@ -1,13 +1,6 @@
 import { Tabs } from "expo-router";
-import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { View, Text, StyleSheet } from 'react-native';
-
-const TAB_ITEMS = [
-  { name: 'index', title: 'Home', activeIcon: 'home', inactiveIcon: 'home-outline' as const },
-  { name: 'about', title: 'Feed', activeIcon: 'radio', inactiveIcon: 'radio-outline' as const },
-  { name: 'cart', title: 'Cart', activeIcon: 'bag', inactiveIcon: 'bag-outline' as const },
-  { name: 'profile', title: 'User', activeIcon: 'person', inactiveIcon: 'person-outline' as const },
-];
 
 export default function TabsLayout() {
   return (
