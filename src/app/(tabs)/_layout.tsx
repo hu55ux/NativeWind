@@ -1,24 +1,49 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from '@expo/vector-icons';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 
 export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarStyle: styles.tabBar,
+        tabBarStyle: {
+            backgroundColor: '#FFFFFF',
+            borderTopWidth: 0,
+            elevation: 10,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: -4 },
+            shadowOpacity: 0.08,
+            shadowRadius: 8,
+            height: 65,
+            paddingBottom: 10,
+            paddingTop: 8,
+        },
         tabBarActiveTintColor: '#7B39FD',
         tabBarInactiveTintColor: '#999',
-        tabBarLabelStyle: styles.tabLabel,
+        tabBarLabelStyle: {
+            fontSize: 11,
+            fontWeight: '500',
+        },
       }}
     >
+      
       <Tabs.Screen
         name="index"
         options={{
           title: 'Home',
+          tabBarStyle: { display: 'none' }, // Hide default tab bar for Pinterest Dashboard
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons name={focused ? 'home' : 'home-outline'} size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="scan"
+        options={{
+          title: 'Scan',
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'qr-code' : 'qr-code-outline'} size={size} color={color} />
           ),
         }}
       />
@@ -38,8 +63,8 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size, focused }) => (
             <View>
               <Ionicons name={focused ? 'bag' : 'bag-outline'} size={size} color={color} />
-              <View style={styles.cartBadge}>
-                <Text style={styles.cartBadgeText}>3</Text>
+              <View className="absolute -top-1 right-[-6px] bg-[#FF6E54] rounded-lg w-4 h-4 items-center justify-center">
+                <Text className="text-white text-[9px] font-bold">3</Text>
               </View>
             </View>
           ),
@@ -57,38 +82,3 @@ export default function TabsLayout() {
     </Tabs>
   );
 }
-
-const styles = StyleSheet.create({
-  tabBar: {
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 0,
-    elevation: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    height: 65,
-    paddingBottom: 10,
-    paddingTop: 8,
-  },
-  tabLabel: {
-    fontSize: 11,
-    fontWeight: '500',
-  },
-  cartBadge: {
-    position: 'absolute',
-    top: -4,
-    right: -6,
-    backgroundColor: '#FF6E54',
-    borderRadius: 8,
-    width: 16,
-    height: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cartBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 9,
-    fontWeight: '700',
-  },
-});

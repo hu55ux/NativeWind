@@ -75,8 +75,8 @@ export default function LoginScreen() {
             </View>
 
             <View className="mt-4">
-              <Text className="text-[#1A1A1A] font-bold text-sm mb-2 ml-1">Şifrə</Text>
-              <View className="bg-white rounded-2xl flex-row items-center px-4 py-4 border border-[#EEEEEE]">
+              <Text className="text-[#1A1A1A] dark:text-[#EEE] font-bold text-sm mb-2 ml-1">Şifrə</Text>
+              <View className="bg-white dark:bg-[#1E1E24] rounded-2xl flex-row items-center px-4 py-4 border border-[#EEEEEE] dark:border-white/5">
                 <Ionicons name="lock-closed-outline" size={20} color="#AAAAAA" />
                 <TextInput
                   value={password}

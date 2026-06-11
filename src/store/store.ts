@@ -1,27 +1,26 @@
-import { createMMKV } from 'react-native-mmkv'
+import { createMMKV } from 'react-native-mmkv';
 
-export const storage = createMMKV()
+export const storage = createMMKV();
 
 export const KEYS = {
-    ACCESS_TOKEN: 'accessToken',
-    REFRESH_TOKEN: 'refreshToken',
-    THEME: 'theme'
-}
+  ACCESS_TOKEN: 'accessToken',
+  REFRESH_TOKEN: 'refreshToken',
+  THEME: 'theme'
+};
 
 export const getTheme = () => {
-    return storage.getString(KEYS.THEME) || 'light'
-}
+  return storage.getString(KEYS.THEME) || 'light';
+};
 
 export const setTheme = (theme: 'light' | 'dark') => {
-    storage.set(KEYS.THEME, theme)
-}
+  storage.set(KEYS.THEME, theme);
+};
 
 export const isAuthenticated = () => {
-    return !!storage.getString(KEYS.ACCESS_TOKEN)
-}
+  return !!storage.getString(KEYS.ACCESS_TOKEN);
+};
 
 export const logout = () => {
-    storage.set(KEYS.ACCESS_TOKEN, '')
-    storage.set(KEYS.REFRESH_TOKEN, '')
-    // Clear any other data if needed
-}
+  storage.set(KEYS.ACCESS_TOKEN, '');
+  storage.set(KEYS.REFRESH_TOKEN, '');
+};

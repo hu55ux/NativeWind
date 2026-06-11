@@ -1,8 +1,7 @@
 import { storage } from '../store/store';
 
-// MMKV-ni inisializasiya edirik. Bu obyekt tətbiq boyu vahid (singleton) kimi istifadə olunacaq.
+// MMKV inisializasiyası. Tətbiq boyu vahid (singleton) kimi istifadə olunacaq.
 export { storage };
-
 
 /**
  * MMKV vasitəsilə məlumatları yadda saxlamaq və oxumaq üçün köməkçi metodlar.
